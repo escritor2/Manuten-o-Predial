@@ -2,8 +2,8 @@
 FROM node:20-alpine AS frontend-builder
 
 # Instala o PHP necessário para o plugin Wayfinder do Laravel
-RUN apk add --no-cache php82 php82-phar php82-mbstring php82-openssl php82-xml php82-tokenizer php82-dom php82-session
-RUN ln -s /usr/bin/php82 /usr/bin/php
+RUN apk add --no-cache php83 php83-phar php83-mbstring php83-openssl php83-xml php83-tokenizer php83-dom php83-session
+RUN ln -s /usr/bin/php83 /usr/bin/php
 
 WORKDIR /app
 # O Wayfinder precisa acessar o backend para gerar as rotas

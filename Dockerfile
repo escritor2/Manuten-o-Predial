@@ -1,15 +1,20 @@
 # --- Estágio 1: Build do Frontend ---
 FROM node:20-alpine AS frontend-builder
 
-# Instala o PHP necessário para o plugin Wayfinder do Laravel
-RUN apk add --no-cache php83 php83-phar php83-mbstring php83-openssl php83-xml php83-tokenizer php83-dom php83-session
+# Instala o PHP e o Composer necessários para o plugin Wayfinder do Laravel
+RUN apk add --no-cache php83 php83-phar php83-mbstring php83-openssl php83-xml php83-tokenizer php83-dom php83-session curl
+RUN curl -sS https://getcomposer.org/installer | php83 -- --install-dir=/usr/local/bin --filename=composer
 RUN ln -s /usr/bin/php83 /usr/bin/php
 
 WORKDIR /app
-# O Wayfinder precisa acessar o backend para gerar as rotas
+# Precisamos do backend completo (incluindo vendor) para o Wayfinder funcionar
 COPY backend /backend
-COPY frontend /app
+WORKDIR /backend
+RUN composer install --no-dev --optimize-autoloader
 
+# Agora sim, voltamos para o frontend
+WORKDIR /app
+COPY frontend /app
 RUN npm install
 RUN npm run build
 

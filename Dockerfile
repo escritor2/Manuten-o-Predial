@@ -1,20 +1,15 @@
 # --- Estágio 1: Build do Frontend ---
 FROM node:20-alpine AS frontend-builder
 
-# Instala o PHP e o Composer necessários para o plugin Wayfinder do Laravel
-RUN apk add --no-cache php83 php83-phar php83-mbstring php83-openssl php83-xml php83-tokenizer php83-dom php83-session curl
-RUN curl -sS https://getcomposer.org/installer | php83 -- --install-dir=/usr/local/bin --filename=composer
-RUN ln -s /usr/bin/php83 /usr/bin/php
+# Instala o PHP necessário para o plugin Wayfinder do Laravel
+RUN apk add --no-cache php82 php82-phar php82-mbstring php82-openssl php82-xml php82-tokenizer php82-dom php82-session
+RUN ln -s /usr/bin/php82 /usr/bin/php
 
 WORKDIR /app
-# Precisamos do backend completo (incluindo vendor) para o Wayfinder funcionar
+# O Wayfinder precisa acessar o backend para gerar as rotas
 COPY backend /backend
-WORKDIR /backend
-RUN composer install --no-dev --optimize-autoloader
-
-# Agora sim, voltamos para o frontend
-WORKDIR /app
 COPY frontend /app
+
 RUN npm install
 RUN npm run build
 
@@ -31,6 +26,12 @@ COPY --chown=www-data:www-data backend/ .
 
 # Copia os assets compilados do estágio anterior
 COPY --from=frontend-builder --chown=www-data:www-data /app/public/build ./public/build
+
+# Dependências do sistema (iconv/ext-iconv)
+# Nota: iconv normalmente já está disponível via glibc; aqui garantimos headers/utillibs.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libc6-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 # Instala dependências do Composer
 RUN composer install --no-dev --optimize-autoloader
